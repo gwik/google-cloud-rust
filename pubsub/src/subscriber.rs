@@ -15,6 +15,10 @@ use google_cloud_googleapis::pubsub::v1::{
 use crate::apiv1::default_retry_setting;
 use crate::apiv1::subscriber_client::{create_empty_streaming_pull_request, SubscriberClient};
 
+mod lease;
+
+pub use lease::LeaseExtensionSetting;
+
 pub struct ReceivedMessage {
     pub message: PubsubMessage,
     ack_id: String,
@@ -63,6 +67,8 @@ pub struct SubscriberConfig {
     pub stream_ack_deadline_seconds: i32,
     pub max_outstanding_messages: i64,
     pub max_outstanding_bytes: i64,
+    /// Control automatic acknowledgment deadline extension.
+    pub lease_extension_setting: Option<LeaseExtensionSetting>,
 }
 
 impl Default for SubscriberConfig {
@@ -73,6 +79,7 @@ impl Default for SubscriberConfig {
             stream_ack_deadline_seconds: 60,
             max_outstanding_messages: 1000,
             max_outstanding_bytes: 1000 * 1000 * 1000,
+            lease_extension_setting: None,
         }
     }
 }
@@ -98,9 +105,17 @@ impl Subscriber {
         // ping request
         let subscription_clone = subscription.to_string();
 
+        // FIXME(gwik): how to pass exactly_once settings?
+        if let Some(lease_extension_setting) = config.lease_extension_setting {
+            let subscription = 
+            let deadline_tracker = opt.map(|lease_setting| lease::DeadlinesTracker::new(lease_setting, false));
+        }
+
         let cancel_receiver = ctx.clone();
         let pinger = tokio::spawn(async move {
             loop {
+                // TODO(gwik): lease management here ?
+
                 select! {
                     _ = ctx.cancelled() => {
                         ping_sender.close();
