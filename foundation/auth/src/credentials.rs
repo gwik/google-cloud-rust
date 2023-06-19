@@ -84,6 +84,10 @@ impl CredentialsFile {
         Ok(serde_json::from_slice(credentials_json.as_slice())?)
     }
 
+    pub async fn new_from_bytes(bytes: &[u8]) -> Result<Self, Error> {
+        Ok(serde_json::from_slice(bytes)?)
+    }
+
     async fn json_from_env() -> Result<Vec<u8>, ()> {
         let credentials = std::env::var("GOOGLE_APPLICATION_CREDENTIALS_JSON")
             .map_err(|_| ())
