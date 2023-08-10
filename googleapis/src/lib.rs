@@ -65,4 +65,11 @@ pub mod cloud {
             pub mod v1;
         }
     }
+
+    #[cfg(feature = "secretmanager")]
+    #[path = ""]
+    pub mod secretmanager {
+        #[path = "google.cloud.secretmanager.v1.rs"]
+        pub mod v1;
+    }
 }
